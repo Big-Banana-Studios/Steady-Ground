@@ -345,6 +345,9 @@ try {
       .startsWith('mailto:karunahealinghearts@yahoo.com'));
   check('it points a child at a grown-up',
     (await page.eval('return document.getElementById("contact").textContent')).includes('ask a grown-up'));
+  check('it says who stands behind the app',
+    (await page.eval('return document.querySelector(".made-in").textContent'))
+      .trim() === 'Steady Ground is veteran-made and maintained in the USA.');
   check('the address is not sitting in the page source for spam bots',
     await page.eval(`
       // What a scraper fetching index.html would see, before any script runs.

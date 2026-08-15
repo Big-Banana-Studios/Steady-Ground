@@ -564,6 +564,16 @@ textarea.nudge { border-color: var(--calm); animation: nudge .5s ease; }
 .contact-email:hover { color: var(--accent-deep); }
 .contact-kids { color: var(--text-muted); }
 
+/* Set apart by a rule rather than made loud: it says who stands behind the
+   app, which a parent deciding whether to trust it wants to know. */
+.made-in {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--divider);
+  font-size: .88rem;
+  color: var(--text-muted);
+}
+
 /* ---------------------------------------------------------------- toast */
 
 .toast {

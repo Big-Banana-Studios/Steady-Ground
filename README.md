@@ -8,7 +8,7 @@ It runs entirely inside the browser, on the child's own device, using Liquid
 AI's `LFM2.5-1.2B-Instruct` through WebGPU. No server, no account, no API key,
 no bill. Once the model has downloaded it works with no internet at all.
 
-**Version 1.4.1 · Aug 2026**
+**Version 1.4.2 · Aug 2026**
 
 ---
 
@@ -278,7 +278,7 @@ is harvested by spam bots, and this one belongs to a person.
 
 ```powershell
 npm test      # 109 filter tests — blocklists, coherence, length caps, fallbacks
-npm run smoke # 60 browser tests — drives real headless Chrome through the app
+npm run smoke # 61 browser tests — drives real headless Chrome through the app
 npm run check # both
 ```
 
