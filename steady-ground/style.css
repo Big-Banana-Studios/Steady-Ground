@@ -1,0 +1,612 @@
+/* Steady Ground — one quiet planet.
+
+   Rules this file follows, all of them for the same reason: the child using it
+   is already overwhelmed before they open the page.
+
+   - No textures, no patterns, no busy backgrounds. Flat colour only.
+   - Nothing sharp. Every corner is rounded, every edge is a tone shift or a
+     soft shadow rather than a line.
+   - More whitespace than looks necessary.
+   - Every animation is slow. The loading pulse breathes at four seconds a
+     cycle, which is roughly a calm breath, and stops entirely for anyone who
+     has asked their system for less motion.
+   - Fonts are served from this folder, not from Google. The app tells parents
+     that nothing leaves the device, and a webfont request would make that
+     a lie. */
+
+@font-face {
+  font-family: 'Nunito';
+  src: url('./assets/fonts/nunito-latin.woff2') format('woff2');
+  font-weight: 200 1000;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nunito Sans';
+  src: url('./assets/fonts/nunito-sans-latin.woff2') format('woff2');
+  font-weight: 200 1000;
+  font-display: swap;
+}
+
+:root {
+  --bg:           #F0F5F2;
+  --bg-sidebar:   #E2EBE4;
+  --bg-sidebar-2: #EAF1EC;
+  --accent:       #3A7CA5;
+  --accent-deep:  #2E6487;
+  --accent-2:     #5B9279;
+  --text:         #2C3E50;
+  --text-muted:   #6B7F89;
+  --input-bg:     #FAFCFB;
+  --input-focus:  #A8CCE0;
+  --output-bg:    #F5F9FC;
+  --divider:      #C8D8CE;
+  --calm:         #94B3D4;
+  --calm-bg:      #EEF3FA;
+  --success:      #5E9E6E;
+  --on-accent:    #FFFFFF;
+  --scrim:        rgba(44, 62, 80, .42);
+
+  --shadow-sm: 0 1px 3px rgba(44, 62, 80, .06);
+  --shadow-md: 0 3px 14px rgba(44, 62, 80, .08);
+  --shadow-lg: 0 8px 30px rgba(44, 62, 80, .11);
+
+  --radius:    22px;
+  --radius-sm: 15px;
+
+  --head: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  --body: 'Nunito Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Wide enough that "Why Does This Matter?" stays on one line even once a
+     scrollbar appears in the tab list on a short window. */
+  --sidebar-w: 296px;
+  --tap: 48px;              /* minimum touch target, everywhere */
+}
+
+:root[data-theme="dark"] {
+  --bg:           #1A2332;
+  --bg-sidebar:   #151D2B;
+  --bg-sidebar-2: #1B2536;
+  --accent:       #5BA4D9;
+  --accent-deep:  #7CBCE9;
+  --accent-2:     #7FB99C;
+  --text:         #D4E0ED;
+  --text-muted:   #93A6B8;
+  --input-bg:     #1E2A3A;
+  --input-focus:  #3E6B8C;
+  --output-bg:    #1E2A3A;
+  --divider:      #2A3A4E;
+  --calm:         #7C9FC7;
+  --calm-bg:      #1D2938;
+  --success:      #6BAF7B;
+  --on-accent:    #10192A;
+  --scrim:        rgba(6, 10, 18, .6);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, .3);
+  --shadow-md: 0 3px 14px rgba(0, 0, 0, .38);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, .48);
+}
+
+/* The whole app scales from here, so the text-size control moves everything
+   together rather than leaving buttons behind. */
+:root                    { font-size: 106.25%; }   /* 17px */
+:root[data-text="large"]   { font-size: 118.75%; } /* 19px */
+:root[data-text="largest"] { font-size: 131.25%; } /* 21px */
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+/* The `hidden` attribute only wins by default because the browser's own
+   stylesheet says `display: none`, which any `display` rule in this file
+   outranks. Several things here are flex containers that the app hides with
+   .hidden = true — the output tools on the care card, the follow-up buttons —
+   and without this they stay stubbornly on screen. */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 1rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+body.is-locked { overflow: hidden; }
+
+h1, h2, h3 { font-family: var(--head); font-weight: 800; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute; left: -9999px; top: 0; z-index: 100;
+  background: var(--accent); color: var(--on-accent);
+  padding: 12px 20px; border-radius: 0 0 var(--radius-sm) 0; font-weight: 700;
+}
+.skip-link:focus { left: 0; }
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.layout { display: flex; min-height: 100%; }
+
+/* -------------------------------------------------------------- sidebar */
+
+.sidebar {
+  width: var(--sidebar-w);
+  flex: 0 0 var(--sidebar-w);
+  /* Deep top padding on phones so the open drawer clears the ☰ button, which
+     stays put and doubles as the close button. The desktop rule below takes it
+     back off once the sidebar is permanent and the button is gone. */
+  padding: 74px 18px 20px;
+  display: flex; flex-direction: column; gap: 22px;
+  position: fixed; top: 0; bottom: 0; left: 0; z-index: 30;
+  /* The tab list scrolls, not the whole sidebar, so the version number and the
+     For Parents button stay put on a short window instead of falling off the
+     bottom where nobody scrolls to find them. */
+  overflow: hidden;
+  transform: translateX(-100%);
+  transition: transform .3s ease;
+  box-shadow: var(--shadow-md);
+
+  /* The living-but-not-distracting gradient. 90 seconds a cycle: if you can
+     see it move, it is too fast. */
+  background: linear-gradient(160deg,
+    var(--bg-sidebar) 0%, var(--bg-sidebar-2) 50%, var(--bg-sidebar) 100%);
+  background-size: 100% 260%;
+  animation: drift 90s ease-in-out infinite;
+}
+
+@keyframes drift {
+  0%, 100% { background-position: 0% 0%; }
+  50%      { background-position: 0% 100%; }
+}
+
+.sidebar.is-open { transform: translateX(0); }
+
+.brand h1 { font-size: 1.42rem; margin: 0 0 3px; letter-spacing: -.01em; }
+.brand-sub { margin: 0; font-size: .82rem; color: var(--text-muted); }
+
+.tabs {
+  display: flex; flex-direction: column; gap: 4px;
+  flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin;
+  /* Vertical room only, for a focus ring on the first and last tab while
+     scrolled — horizontal padding here would narrow the labels enough to wrap
+     "Why Does This Matter?" onto two lines. */
+  padding: 3px 0;
+}
+
+.tab {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  min-height: var(--tap);
+  border: 0; background: transparent; color: var(--text-muted);
+  font: inherit; font-size: .95rem; font-weight: 600; text-align: left;
+  padding: 10px 14px; border-radius: var(--radius-sm); cursor: pointer;
+  transition: background .2s ease, color .2s ease;
+}
+
+.tab:hover { background: rgba(58, 124, 165, .1); color: var(--text); }
+.tab.is-active {
+  background: var(--accent); color: var(--on-accent);
+  box-shadow: var(--shadow-sm);
+}
+.tab-icon { font-size: 1.15rem; line-height: 1; flex: 0 0 auto; }
+
+.sidebar-foot { display: flex; flex-direction: column; gap: 2px; padding-top: 14px; }
+.sidebar-foot::before {
+  content: ''; display: block; height: 1px; background: var(--divider);
+  margin: 0 4px 12px; opacity: .7;
+}
+
+.foot-btn {
+  min-height: 44px;
+  border: 0; background: transparent; color: var(--text-muted);
+  font: inherit; font-size: .86rem; text-align: left;
+  padding: 9px 12px; border-radius: var(--radius-sm); cursor: pointer;
+  transition: background .2s ease, color .2s ease;
+}
+.foot-btn:hover { background: rgba(58, 124, 165, .1); color: var(--text); }
+
+.status {
+  margin: 10px 0 2px; padding: 0 12px; font-size: .78rem; color: var(--text-muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.status-dot {
+  width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--text-muted); opacity: .5;
+}
+.status.is-ok .status-dot { background: var(--success); opacity: 1; }
+.status.is-error .status-dot { background: #C4735E; opacity: 1; }
+
+/* Deploy indicator: says which build is running, and whether the cache
+   actually serving the page agrees with it. */
+.version { margin: 0; padding: 0 12px; font-size: .74rem; color: var(--text-muted); opacity: .8; }
+.version.is-ok { color: var(--success); opacity: 1; }
+.version.is-stale {
+  color: var(--on-accent); background: var(--accent);
+  border-radius: 999px; padding: 3px 10px; margin: 2px 12px;
+  align-self: flex-start; font-weight: 700; opacity: 1;
+}
+
+.menu-toggle {
+  position: fixed; top: calc(12px + env(safe-area-inset-top)); left: 12px; z-index: 40;
+  width: var(--tap); height: var(--tap);
+  border: 0; background: var(--bg-sidebar); color: var(--text);
+  font-size: 1.25rem; line-height: 1;
+  border-radius: var(--radius-sm); box-shadow: var(--shadow-md); cursor: pointer;
+}
+
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 25; }
+.scrim[hidden] { display: none; }
+
+/* -------------------------------------------------------------- content */
+
+.content { flex: 1; min-width: 0; padding: 76px 18px 64px; display: flex; justify-content: center; }
+.content:focus { outline: none; }
+
+.panel {
+  width: 100%; max-width: 720px;
+  display: flex; flex-direction: column; gap: 24px;
+  transition: opacity .24s ease, transform .24s ease;
+}
+.panel:focus { outline: none; }
+.panel.is-switching { opacity: 0; transform: translateY(8px); }
+
+.panel-head h2 { font-size: 1.6rem; margin: 0 0 6px; letter-spacing: -.01em; }
+.panel-desc { margin: 0; color: var(--text-muted); font-size: .98rem; max-width: 54ch; }
+
+.card {
+  background: var(--input-bg);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-md);
+}
+
+textarea {
+  width: 100%; min-height: 120px; max-height: 460px; resize: vertical;
+  border: 2px solid transparent; border-radius: var(--radius-sm);
+  background: transparent; color: var(--text);
+  font-family: var(--body); font-size: 1rem; line-height: 1.65;
+  padding: 12px 14px; outline: none;
+  transition: border-color .2s ease, background .2s ease;
+}
+textarea::placeholder { color: var(--text-muted); opacity: .75; }
+textarea:focus { border-color: var(--input-focus); background: rgba(168, 204, 224, .08); }
+textarea.nudge { border-color: var(--calm); animation: nudge .5s ease; }
+
+@keyframes nudge {
+  0%, 100% { transform: translateX(0); }
+  30%      { transform: translateX(-5px); }
+  70%      { transform: translateX(5px); }
+}
+
+.input-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; margin-top: 14px; flex-wrap: wrap;
+}
+.counter { font-size: .8rem; color: var(--text-muted); }
+.counter.is-full { color: var(--accent); font-weight: 700; }
+.actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+.btn {
+  min-height: var(--tap);
+  border: 0; background: var(--accent); color: var(--on-accent);
+  font: inherit; font-size: 1rem; font-weight: 700; font-family: var(--head);
+  padding: 12px 28px; border-radius: 999px; cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background .2s ease, transform .12s ease, opacity .2s ease;
+}
+.btn:hover:not(:disabled) { background: var(--accent-deep); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: .45; cursor: default; }
+
+.btn-ghost {
+  min-height: 44px;
+  border: 0; background: transparent; color: var(--text-muted);
+  font: inherit; font-size: .86rem; padding: 10px 14px;
+  border-radius: 999px; cursor: pointer;
+  transition: background .2s ease, color .2s ease;
+}
+.btn-ghost:hover { background: rgba(58, 124, 165, .12); color: var(--text); }
+
+.btn-soft {
+  min-height: 44px;
+  border: 0; background: rgba(91, 146, 121, .16); color: var(--text);
+  font: inherit; font-size: .9rem; font-weight: 600;
+  padding: 11px 20px; border-radius: 999px; cursor: pointer;
+  transition: background .2s ease, opacity .2s ease;
+}
+.btn-soft:hover:not(:disabled) { background: rgba(91, 146, 121, .28); }
+.btn-soft:disabled { opacity: .45; cursor: default; }
+
+/* --------------------------------------------------------------- output */
+
+.output-card { background: var(--output-bg); box-shadow: var(--shadow-lg); padding: 22px; }
+.output-card:focus { outline: none; }
+
+.output-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 10px;
+}
+.output-head h3 {
+  font-size: .88rem; font-weight: 700; margin: 0;
+  color: var(--text-muted); letter-spacing: .06em; text-transform: uppercase;
+}
+.output-tools { display: flex; gap: 2px; flex-wrap: wrap; }
+
+.output-body { font-size: 1.02rem; line-height: 1.75; overflow-wrap: break-word; }
+.output-body > *:first-child { margin-top: 0; }
+.output-body > *:last-child { margin-bottom: 0; }
+.output-body h3 {
+  font-size: 1.06rem; font-weight: 800; color: var(--accent); margin: 26px 0 8px;
+}
+.output-body p { margin: 0 0 16px; }
+.output-body ul, .output-body ol { margin: 0 0 18px; padding-left: 26px; }
+.output-body li { margin-bottom: 10px; }
+.output-body li::marker { color: var(--accent-2); font-weight: 700; }
+.output-body strong { font-weight: 800; }
+/* Emphasis is never italic here — bold and a colour shift instead. */
+.output-body .emph { color: var(--accent-2); font-weight: 700; font-style: normal; }
+.output-body hr { border: 0; border-top: 1px solid var(--divider); margin: 22px 0; }
+
+.notice { margin: 0; color: var(--text); font-size: 1rem; }
+
+.loading { display: flex; align-items: center; gap: 14px; color: var(--text-muted); padding: 12px 0; }
+.pulse {
+  width: 18px; height: 18px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--accent);
+  animation: breathe 4s ease-in-out infinite;   /* the pace of a calm breath */
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: .3; transform: scale(.75); }
+  50%      { opacity: .9; transform: scale(1.15); }
+}
+
+/* The distress card. Different colour, no tools, nothing to press — it is not
+   an answer, it is somebody saying something. */
+.output-card.is-care { background: var(--calm-bg); box-shadow: var(--shadow-lg); }
+.care-mark { font-size: 2rem; line-height: 1; margin-bottom: 6px; }
+.care-title { font-size: 1.2rem; margin: 0 0 12px; color: var(--accent); }
+.is-care .output-body { font-size: 1.04rem; }
+.is-care .output-body strong { color: var(--text); }
+
+/* The one thing no filter can fix: a child cannot tell a confident wrong answer
+   from a right one. So the app says so under every answer it did not write
+   itself — quiet enough not to nag, present enough to have been read. */
+.fine-print {
+  margin: 20px 0 0;
+  padding-top: 15px;
+  border-top: 1px solid var(--divider);
+  font-size: .85rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.follow-ups {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  margin-top: 16px;
+}
+/* Full width so it sits on its own row above the buttons it describes. */
+.follow-hint { flex: 1 0 100%; margin: 0; font-size: .9rem; color: var(--text-muted); }
+
+.next-tip { display: flex; }
+.tip {
+  border: 0; background: transparent; color: var(--text-muted);
+  font: inherit; font-size: .88rem; text-align: left;
+  padding: 12px 16px; border-radius: var(--radius-sm); cursor: pointer;
+  min-height: 44px;
+  transition: background .2s ease, color .2s ease;
+}
+.tip:hover { background: rgba(58, 124, 165, .1); color: var(--text); }
+
+/* ----------------------------------------------------------------- gate */
+
+.gate {
+  position: fixed; inset: 0; z-index: 60;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.gate[hidden], .gate.is-hushed { display: none; }
+
+.gate-card {
+  background: var(--input-bg); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); padding: 34px 28px 28px;
+  max-width: 460px; width: 100%; text-align: center;
+}
+.gate-globe { font-size: 3rem; line-height: 1; margin-bottom: 12px; }
+.gate-card h2 { font-size: 1.4rem; margin: 0 0 14px; }
+.gate-body { color: var(--text-muted); font-size: .96rem; margin-bottom: 22px; text-align: left; }
+.gate-body strong { color: var(--text); }
+.gate-body .detail {
+  display: block; background: var(--output-bg); color: var(--text);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-top: 6px;
+  font-family: ui-monospace, Consolas, monospace; font-size: .78rem;
+  line-height: 1.5; overflow-wrap: anywhere;
+  -webkit-user-select: all; user-select: all;
+}
+.gate-card .btn { width: 100%; }
+
+.bar { margin-bottom: 18px; }
+.bar-track { height: 12px; background: var(--divider); border-radius: 999px; overflow: hidden; }
+.bar-fill { height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width .4s ease; }
+.bar-label { margin: 10px 0 0; font-size: .84rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------------ guidebook */
+
+.guidebook {
+  position: fixed; inset: 0; z-index: 80;
+  background: var(--scrim);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.guidebook[hidden] { display: none; }
+
+.guide-card {
+  position: relative;
+  background: var(--input-bg); border-radius: 28px;
+  box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 520px; max-height: 90vh;
+  padding: 34px 26px 22px;
+  display: flex; flex-direction: column; overflow-y: auto;
+}
+
+.guide-skip {
+  position: absolute; top: 12px; right: 14px;
+  border: 0; background: transparent; color: var(--text-muted);
+  font: inherit; font-size: .82rem; padding: 10px 14px;
+  border-radius: 999px; cursor: pointer; min-height: 44px;
+}
+.guide-skip:hover { color: var(--text); background: rgba(58, 124, 165, .1); }
+
+.guide-stage { flex: 1; text-align: center; padding: 10px 0 20px; }
+.guide-stage.slide-next { animation: slide-in-right .32s ease; }
+.guide-stage.slide-back { animation: slide-in-left .32s ease; }
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(26px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-26px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.guide-emoji { font-size: 3.4rem; line-height: 1.2; margin-bottom: 14px; }
+.guide-heading { font-size: 1.5rem; margin: 0 0 16px; }
+.guide-lines { font-size: 1.14rem; line-height: 2; margin: 0 0 6px; color: var(--text); }
+.guide-footer { margin-top: 18px; color: var(--text-muted); }
+
+.guide-list { list-style: none; margin: 18px 0 0; padding: 0; text-align: left; }
+.guide-list li {
+  display: flex; gap: 11px; align-items: flex-start;
+  font-size: .95rem; line-height: 1.5; margin-bottom: 11px;
+}
+.guide-list-icon { font-size: 1.1rem; flex: 0 0 1.5rem; }
+.guide-list strong { font-weight: 800; }
+
+.guide-steps { margin: 18px auto 0; padding: 0; list-style: none; text-align: left; max-width: 22rem; }
+.guide-steps li { font-size: 1.06rem; line-height: 2; }
+
+/* Sticks to the bottom of the card. The tabs card is unavoidably long, and a
+   child who has to scroll to find the Next button is a child who thinks the
+   guide is stuck. */
+.guide-foot {
+  position: sticky; bottom: 0;
+  display: flex; flex-direction: column; gap: 16px; align-items: center;
+  background: var(--input-bg);
+  padding: 14px 0 4px;
+  margin-top: auto;
+}
+
+.guide-dots { display: flex; gap: 10px; }
+.guide-dot {
+  width: 24px; height: 24px; padding: 0; border: 0; background: transparent;
+  cursor: pointer; display: grid; place-items: center;
+}
+.guide-dot::after {
+  content: ''; width: 9px; height: 9px; border-radius: 50%;
+  background: transparent; box-shadow: inset 0 0 0 2px var(--divider);
+  transition: background .2s ease, box-shadow .2s ease;
+}
+.guide-dot.is-on::after { background: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+
+.guide-nav { display: flex; gap: 10px; align-items: center; width: 100%; justify-content: center; }
+.guide-nav .btn { flex: 1; max-width: 320px; }
+
+/* ---------------------------------------------------------------- modal */
+
+.modal {
+  position: fixed; inset: 0; z-index: 90;
+  background: var(--scrim);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  overflow-y: auto;
+}
+.modal[hidden] { display: none; }
+
+.modal-card {
+  background: var(--input-bg); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 620px; max-height: 88vh; overflow-y: auto;
+  padding: 30px 26px 26px;
+}
+.modal-card h2 { font-size: 1.45rem; margin: 0 0 6px; }
+.modal-card h3 { font-size: 1.02rem; margin: 24px 0 6px; color: var(--accent); }
+.modal-card p { margin: 0 0 12px; font-size: .96rem; line-height: 1.7; }
+.modal-card .btn { width: 100%; margin-top: 22px; }
+
+/* ---------------------------------------------------------------- toast */
+
+.toast {
+  position: fixed; bottom: calc(26px + env(safe-area-inset-bottom)); left: 50%;
+  transform: translate(-50%, 16px);
+  background: var(--text); color: var(--bg);
+  font-size: .88rem; font-weight: 600;
+  padding: 12px 22px; border-radius: 999px; box-shadow: var(--shadow-lg);
+  opacity: 0; pointer-events: none; z-index: 95;
+  transition: opacity .28s ease, transform .28s ease;
+}
+.toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
+
+/* ------------------------------------------ wider screens (tablet, desktop) */
+
+@media (min-width: 900px) {
+  .menu-toggle, .scrim { display: none; }
+  .sidebar { position: sticky; height: 100vh; transform: none; padding-top: 30px; }
+  .content { padding: 52px 44px 80px; }
+  .panel { gap: 28px; }
+  .panel-head h2 { font-size: 1.85rem; }
+  .card { padding: 24px; }
+  .output-card { padding: 26px 28px 28px; }
+  .guide-card { padding: 40px 40px 26px; }
+}
+
+/* Phones: the guidebook is nearly the whole screen, as the brief asks. */
+@media (max-width: 560px) {
+  .guidebook { padding: 10px; }
+  .guide-card { max-height: 96vh; border-radius: 22px; padding: 30px 20px 18px; }
+  .guide-emoji { font-size: 2.8rem; }
+  .guide-heading { font-size: 1.3rem; }
+  .guide-lines { font-size: 1.05rem; line-height: 1.9; }
+  .guide-list li { font-size: .9rem; line-height: 1.45; margin-bottom: 9px; }
+  .guide-stage { padding-bottom: 8px; }
+  .output-tools { width: 100%; }
+}
+
+/* ------------------------------------------------------------------ print
+
+   Paper is the point here: some kids and parents would rather read the answer
+   away from the screen. Everything except the answer goes. */
+
+@media print {
+  .sidebar, .menu-toggle, .scrim, .gate, .guidebook, .modal, .toast,
+  .input-card, .output-tools, .follow-ups, .next-tip { display: none !important; }
+
+  body { background: #fff; color: #000; }
+  .content { padding: 0; }
+  .output-card { box-shadow: none; background: #fff; padding: 0; }
+  .output-body { font-size: 12pt; }
+  .output-body h3 { color: #000; }
+  .panel-head h2 { font-size: 16pt; }
+}
+
+/* ----------------------------------------------------------- less motion */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  /* The pulse still needs to say "working", so it holds still and visible
+     rather than vanishing at whatever frame it stopped on. */
+  .pulse { opacity: .8; transform: none; }
+}

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-text="normal">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Steady Ground</title>
+<meta name="description" content="A learning partner for kids, running entirely on your own device.">
+<meta name="theme-color" content="#3A7CA5">
+
+<!-- Locked down on purpose. Scripts may only come from this site and the one
+     pinned library; nothing on this page can be talked into loading code from
+     anywhere else. Two entries that look loose but aren't: connect-src allows
+     any https host because the model is fetched from Hugging Face, which
+     redirects across several CDN hostnames that change over time; and
+     jsdelivr appears in worker-src because Transformers.js spawns its own
+     worker from the library URL, which a 'self'-only policy blocks outright. -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' blob: https://cdn.jsdelivr.net 'wasm-unsafe-eval';
+  worker-src 'self' blob: https://cdn.jsdelivr.net;
+  style-src 'self' 'unsafe-inline';
+  font-src 'self';
+  img-src 'self' data:;
+  connect-src 'self' blob: data: https:;
+  object-src 'none';
+  frame-src 'none';
+  base-uri 'self';
+  form-action 'none';">
+
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./assets/icon.svg">
+<link rel="preload" href="./assets/fonts/nunito-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="./assets/fonts/nunito-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<a class="skip-link" href="#panel">Skip to the main part</a>
+
+<button class="menu-toggle" id="menuToggle" type="button" aria-label="Show the tabs" aria-expanded="false" aria-controls="sidebar">☰</button>
+
+<div class="layout">
+
+  <aside class="sidebar" id="sidebar">
+    <header class="brand">
+      <h1><span aria-hidden="true">🌍</span> Steady Ground</h1>
+      <p class="brand-sub">Your learning partner</p>
+    </header>
+
+    <nav class="tabs" id="tabs" aria-label="What do you need help with?"></nav>
+
+    <footer class="sidebar-foot">
+      <button class="foot-btn" id="themeToggle" type="button" aria-pressed="false">🌙 Night mode</button>
+      <button class="foot-btn" id="textSizeBtn" type="button">🔠 Text size: normal</button>
+      <button class="foot-btn" id="guideBtn" type="button">❓ How This Works</button>
+      <button class="foot-btn" id="parentsBtn" type="button">👪 For Parents</button>
+      <p class="status" id="status"><span class="status-dot" aria-hidden="true"></span><span id="statusText">Checking…</span></p>
+      <p class="version" id="version">v1.0.0</p>
+    </footer>
+  </aside>
+
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main class="content">
+    <div class="panel" id="panel" tabindex="-1">
+      <header class="panel-head">
+        <h2 id="tabTitle"></h2>
+        <p id="tabDesc" class="panel-desc"></p>
+      </header>
+
+      <section class="card input-card" aria-label="Your text">
+        <label class="visually-hidden" for="input">Type or paste here</label>
+        <textarea id="input" rows="4" spellcheck="true" autocomplete="off"
+                  autocorrect="off" autocapitalize="sentences"></textarea>
+        <div class="input-foot">
+          <span class="counter" id="counter">0 words · 0 of 2000 characters</span>
+          <div class="actions">
+            <button class="btn-ghost" id="clearBtn" type="button">Clear</button>
+            <button class="btn" id="submitBtn" type="button"></button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card output-card" id="outputCard" tabindex="-1" hidden
+               aria-label="What came back">
+        <div class="output-head">
+          <h3>Here you go</h3>
+          <div class="output-tools" id="outputTools">
+            <button class="btn-ghost" id="copyBtn" type="button">📋 Copy</button>
+            <button class="btn-ghost" id="speakBtn" type="button" aria-pressed="false">🔊 Read aloud</button>
+            <button class="btn-ghost" id="printBtn" type="button">🖨 Print</button>
+            <button class="btn-ghost" id="reportBtn" type="button"
+                    title="Copies this to the clipboard so you can show a grown-up">🚩 Looks wrong</button>
+          </div>
+        </div>
+        <div class="output-body" id="output" role="status" aria-live="polite"></div>
+
+        <!-- Shown under anything the model wrote, and never under the app's own
+             words: the care card, the fallbacks and the "ask your family"
+             messages are written by people and are not sometimes wrong. -->
+        <p class="fine-print" id="finePrint" hidden>
+          I get things wrong sometimes. If something looks odd, check with a grown-up.
+        </p>
+
+        <div class="follow-ups" id="followUps" hidden></div>
+      </section>
+
+      <div class="next-tip" id="nextTip" hidden></div>
+    </div>
+  </main>
+
+</div>
+
+<!-- Covers the app until the helper is on the device. Visible from the start on
+     purpose: a page that looks ready but isn't is worse than one that says so. -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="gate-globe" aria-hidden="true">🌍</div>
+    <h2 id="gateTitle">Checking this device…</h2>
+    <div class="gate-body" id="gateBody">Seeing whether it can run the helper.</div>
+    <div class="bar" id="bar" hidden>
+      <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+      <p class="bar-label" id="barLabel"></p>
+    </div>
+    <button class="btn" id="gateAction" type="button" hidden></button>
+  </div>
+</div>
+
+<div class="guidebook" id="guidebook" hidden></div>
+
+<div class="modal" id="parents" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="parentsTitle">
+    <h2 id="parentsTitle">For Parents</h2>
+
+    <h3>What this is</h3>
+    <p>
+      Steady Ground is a learning partner for children who find schoolwork hard to
+      get into — not a homework machine. Every tab is built to help a child
+      <strong>understand</strong> something, get started on it, or calm down enough to
+      try. It will not write essays, answer worksheet questions, or solve maths
+      problems, and it is instructed to refuse when asked.
+    </p>
+
+    <h3>Where your child's words go</h3>
+    <p>
+      Nowhere. The whole helper runs inside this browser, on this device. There is no
+      account, no server, and no internet connection needed once it has downloaded.
+      Nothing typed here is saved, uploaded, or counted — close the tab and it is
+      genuinely gone. The only things stored on this device are four settings:
+      night mode, text size, whether the welcome guide has been seen, and whether
+      the helper has already been downloaded.
+    </p>
+
+    <h3>The safety filters, honestly</h3>
+    <p>
+      The helper is a small model. It is much less capable than the big AI
+      assistants you may have used, which means it can also be less predictable, so
+      this app checks its work rather than trusting it. Everything a child types is
+      checked before it is sent, and everything that comes back is checked again
+      before it is shown — for language, for coherence, and for answers that have
+      wandered off. When a check fails, your child sees a friendly "let's try that
+      again" message instead of whatever the model produced.
+    </p>
+    <p>
+      <strong>No filter is perfect.</strong> A determined older child can find ways
+      around any filter that runs on their own device, and a small model will
+      sometimes give an answer that is simply unhelpful or a bit wrong. Please treat
+      this as a tool your child uses near you, not one you hand over and walk away
+      from — especially in the first few weeks. Sitting with them the first few times
+      is worth more than any of the filtering above.
+    </p>
+
+    <h3>If your child types something worrying</h3>
+    <p>
+      If the app detects that a child may be in distress — anything about hurting
+      themselves, or being hurt by someone — it does not send that to the model at
+      all. It shows a fixed, human-written message encouraging them to talk to a
+      trusted adult, along with helpline numbers. It cannot alert you, because it
+      keeps no record of anything. If you want to know what your child has been
+      asking, ask them, and use the <strong>🚩 Looks wrong</strong> button together —
+      it copies an exchange to the clipboard so you can look at it side by side.
+    </p>
+
+    <h3>It is not a therapist or a doctor</h3>
+    <p>
+      Calm Corner and What Can I Try offer grounding exercises and activity ideas.
+      They are not treatment, diagnosis, or advice, and the helper is told never to
+      offer medical or psychological advice.
+    </p>
+
+    <button class="btn" id="parentsClose" type="button">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

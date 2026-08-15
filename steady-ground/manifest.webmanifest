@@ -1,0 +1,25 @@
+{
+  "name": "Steady Ground",
+  "short_name": "Steady Ground",
+  "description": "A learning partner for kids — runs entirely on your own device.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F0F5F2",
+  "theme_color": "#3A7CA5",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

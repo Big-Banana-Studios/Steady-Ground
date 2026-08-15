@@ -1,0 +1,13 @@
+{
+  "name": "steady-ground",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Steady Ground — an on-device learning partner for neurodivergent kids.",
+  "type": "module",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node --test tests/safety.test.mjs",
+    "smoke": "node tests/ui.smoke.mjs",
+    "check": "npm test && npm run smoke"
+  }
+}
