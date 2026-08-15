@@ -31,10 +31,11 @@ import {
 import { createGuidebook, hasSeenGuidebook } from './guidebook.js';
 
 // Bump on every deploy, and keep APP_VERSION identical to VERSION in sw.js.
-const APP_VERSION = 'v1.4.0';
+const APP_VERSION = 'v1.4.1';
 const VERSION_DATE = 'Aug 2026';
 
-const MODEL_MB = 814;                    // measured from the Hugging Face CDN
+const MODEL_MB = 814;
+const NEEDED_BYTES = 1.1 * 1073741824;   // the model, the runtime, and headroom                    // measured from the Hugging Face CDN
 const CACHED_FLAG = 'sg-model-cached';
 const THEME_KEY = 'sg-theme';
 const TEXT_SIZE_KEY = 'sg-text-size';
@@ -567,6 +568,15 @@ function showGate(title, body, actionLabel, onAction) {
 const hideGate = () => { el.gate.hidden = true; el.bar.hidden = true; };
 
 function startDownload() {
+  /* Ask the browser to keep this. Both iOS and Android clear cached site data
+     for sites you have not opened in a while, and being asked for 814 MB again
+     because you had a quiet fortnight is the fastest way to lose a child's
+     trust in an app. Chrome decides silently on how much the site is used;
+     asking costs nothing and is ignored where unsupported. */
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().catch(() => { /* nothing to do about a no */ });
+  }
+
   fileProgress.clear();
   el.gateAction.hidden = true;
   el.bar.hidden = false;
@@ -591,6 +601,53 @@ function renderProgress() {
 
 /* Held back while the guidebook is on screen: a child reading "hi there" should
    not have a download prompt slide in underneath them. */
+/* ------------------------------------------------- what this device can do
+
+   The check that runs before anything downloads. "This app needs a newer
+   browser" is useless to somebody holding an iPhone, because the fix is not a
+   browser — every browser on iOS is Safari underneath, so installing Chrome
+   changes nothing. Each kind of device gets the advice that is actually true
+   for it, and a device that CAN run it says what it found before asking anyone
+   to commit 814 MB. */
+
+function deviceKind() {
+  const ua = navigator.userAgent;
+  // iPadOS reports itself as a Mac, and is told apart by the touch screen.
+  if (/iPhone|iPad|iPod/.test(ua)
+    || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
+  if (/Android/.test(ua)) return 'android';
+  return 'desktop';
+}
+
+const CANNOT_RUN = {
+  ios:
+    'This needs an iPhone or iPad running <strong>iOS 18 or newer</strong>.<br><br>'
+    + 'Every browser on an iPhone uses Safari underneath, so installing Chrome '
+    + 'will not change this — it is the iOS version that matters.<br><br>'
+    + 'It runs well on a computer with Chrome or Edge.',
+  android:
+    'This needs <strong>Chrome on Android 12 or newer</strong>.<br><br>'
+    + 'If this is a newer phone, check for a Chrome update in the Play Store and '
+    + 'try again.<br><br>It runs well on a computer with Chrome or Edge.',
+  desktop:
+    'This needs <strong>Chrome or Edge</strong>.<br><br>'
+    + 'Firefox and Safari cannot run it on a computer yet.',
+};
+
+/* Browsers report a storage quota rather than the disk, and Chrome sets that at
+   a fraction of what is free, so this is a signal and not a measurement. Worth
+   having anyway: running out at 700 MB of an 814 MB download is a miserable way
+   to find out. */
+async function spareRoom() {
+  try {
+    if (!navigator.storage || !navigator.storage.estimate) return null;
+    const { quota = 0, usage = 0 } = await navigator.storage.estimate();
+    return quota - usage;
+  } catch { return null; }
+}
+
+const gigabytes = (bytes) => (bytes / 1073741824).toFixed(1);
+
 function applySupport(msg) {
   if (guidebook && guidebook.isOpen) { supportAnswer = msg; return; }
   supportAnswer = null;
@@ -610,9 +667,23 @@ function applySupport(msg) {
         'Steady Ground needs to fetch its helper — about '
         + `<strong>${MODEL_MB} MB</strong>, once. After that it lives on this device `
         + 'and works with no internet.<br><br>'
-        + '<strong>Use wifi, not mobile data.</strong> It can take a few minutes.',
+        + '<strong>Use wifi, not mobile data.</strong> It can take a few minutes.'
+        + '<ul class="ready-list"><li>✅ Graphics: ready</li>'
+        + '<li id="roomLine">⏳ Checking space…</li></ul>',
         'Get it ready', startDownload,
       );
+
+      // Fills in once the browser answers; the button is usable meanwhile.
+      spareRoom().then((room) => {
+        const line = $('roomLine');
+        if (!line) return;
+        if (room === null) { line.textContent = '✅ Space: looks fine'; return; }
+        const enough = room > NEEDED_BYTES;
+        line.textContent = enough
+          ? `✅ Space: about ${gigabytes(room)} GB free`
+          : `⚠️ Space: only about ${gigabytes(room)} GB free — that may not be enough`;
+        line.className = enough ? '' : 'is-warning';
+      });
     }
   } else {
     /* The child reads the first sentence and nothing else, so it has to be the
@@ -622,8 +693,7 @@ function applySupport(msg) {
        explanation for why their homework helper won't open. */
     showGate(
       "This device can't run Steady Ground",
-      'This app needs a newer browser to run. Try opening it in Chrome or Edge '
-      + 'on a computer, or on a newer phone or tablet.'
+      CANNOT_RUN[deviceKind()]
       + (msg.reason && msg.reason !== 'no-webgpu'
         ? `<br><br>For a grown-up: <code class="detail">${escapeHtml(msg.reason)}</code>`
         : ''),

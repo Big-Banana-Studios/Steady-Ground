@@ -239,8 +239,21 @@ try {
   check('this device is told it cannot run the model',
     (await page.eval('return document.getElementById("gateTitle").textContent')).includes("can't run"),
     'headless Chrome has no WebGPU, which is the expected answer here');
-  check('and it says so kindly, without jargon',
-    (await page.eval('return document.getElementById("gateBody").textContent')).includes('newer browser'));
+  check('and the advice fits the device it is running on',
+    // Headless Chrome on Windows reads as a desktop, so it should be told about
+    // Chrome and Edge rather than about iOS versions.
+    (await page.eval('return document.getElementById("gateBody").textContent')).includes('Chrome or Edge'));
+  check('a phone would be told something different',
+    await page.eval(`
+      const body = document.getElementById('gateBody').textContent;
+      // The desktop message must not carry the advice meant for the other two.
+      return !body.includes('iOS 18') && !body.includes('Play Store');`));
+  check('the technical reason is kept for the grown-up, not the child',
+    await page.eval(`
+      const body = document.getElementById('gateBody');
+      const first = body.textContent.trim().split('.')[0];
+      // Whatever the graphics system said belongs below, never in sentence one.
+      return !/adapter|webgpu|gpu/i.test(first);`));
 
   console.log('\nThe main app');
   check('all ten tabs are in the sidebar',
