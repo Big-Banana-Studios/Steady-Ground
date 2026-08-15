@@ -8,7 +8,7 @@
    a child would be told to wait twenty minutes for no reason. */
 
 // Keep identical to APP_VERSION in app.js.
-const VERSION = 'v1.4.3';
+const VERSION = 'v1.5.0';
 const SHELL = `steady-ground-shell-${VERSION}`;
 
 // Keep identical to the import in worker.js.
@@ -25,6 +25,9 @@ const SHELL_FILES = [
   './style.css',
   './manifest.webmanifest',
   './assets/icon.svg',
+  './assets/icon-192.png',
+  './assets/icon-512.png',
+  './assets/icon-maskable-512.png',
   './assets/fonts/nunito-latin.woff2',
   './assets/fonts/nunito-sans-latin.woff2',
 ];

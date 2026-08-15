@@ -31,7 +31,7 @@ import {
 import { createGuidebook, hasSeenGuidebook } from './guidebook.js';
 
 // Bump on every deploy, and keep APP_VERSION identical to VERSION in sw.js.
-const APP_VERSION = 'v1.4.3';
+const APP_VERSION = 'v1.5.0';
 const VERSION_DATE = 'Aug 2026';
 
 const MODEL_MB = 814;                    // measured from the Hugging Face CDN
@@ -74,6 +74,8 @@ const el = {
   guideBtn: $('guideBtn'), parentsBtn: $('parentsBtn'), contactBtn: $('contactBtn'),
   contact: $('contact'), contactEmail: $('contactEmail'),
   contactCopy: $('contactCopy'), contactClose: $('contactClose'),
+  installBtn: $('installBtn'), install: $('install'),
+  installSteps: $('installSteps'), installClose: $('installClose'),
   menuToggle: $('menuToggle'), sidebar: $('sidebar'), scrim: $('scrim'),
   toast: $('toast'), version: $('version'),
   gate: $('gate'), gateTitle: $('gateTitle'), gateBody: $('gateBody'), gateAction: $('gateAction'),
@@ -952,6 +954,77 @@ function contactAddress() {
   return CONTACT.join('@');
 }
 
+/* ------------------------------------------------- add to home screen
+
+   Chrome and Edge fire beforeinstallprompt, which can be saved and fired later
+   from a button of our own — one tap, a proper install. iOS has no such API at
+   all: on an iPhone the only way is Share → Add to Home Screen, by hand, and
+   pretending otherwise would leave a parent tapping a button that does nothing.
+
+   So the button always opens a panel. If the browser gave us a real prompt, the
+   panel offers it. If not, it gives that device's actual steps. */
+
+let installEvent = null;
+
+const alreadyInstalled = () => window.matchMedia('(display-mode: standalone)').matches
+  || window.navigator.standalone === true;
+
+const INSTALL_STEPS = {
+  ios:
+    '<p><strong>On an iPhone or iPad, in Safari:</strong></p>'
+    + '<ol class="install-steps"><li>Tap the <strong>Share</strong> button — the '
+    + 'square with an arrow coming out of it.</li>'
+    + '<li>Scroll down the list and tap <strong>Add to Home Screen</strong>.</li>'
+    + '<li>Tap <strong>Add</strong>.</li></ol>'
+    + '<p class="install-note">Safari is the one that does this properly. If you '
+    + 'are reading this in another browser on an iPhone, open the page in Safari '
+    + 'first.</p>',
+  android:
+    '<p><strong>On Android, in Chrome:</strong></p>'
+    + '<ol class="install-steps"><li>Tap the <strong>⋮</strong> menu at the top '
+    + 'right.</li>'
+    + '<li>Tap <strong>Add to Home screen</strong>, or <strong>Install app</strong> '
+    + 'if you see that instead.</li>'
+    + '<li>Tap <strong>Install</strong>.</li></ol>',
+  desktop:
+    '<p><strong>On a computer, in Chrome or Edge:</strong></p>'
+    + '<ol class="install-steps"><li>Look for the install icon at the right-hand '
+    + 'end of the address bar.</li>'
+    + '<li>Or open the <strong>⋮</strong> menu and choose '
+    + '<strong>Install Steady Ground</strong>.</li></ol>',
+};
+
+function openInstall() {
+  if (installEvent) {
+    el.installSteps.innerHTML =
+      '<p>Your browser can do this in one tap.</p>'
+      + '<button class="btn-soft" id="installNow" type="button">Add it now</button>';
+    $('installNow').addEventListener('click', async () => {
+      const prompt = installEvent;
+      installEvent = null;              // a prompt can only be used once
+      closeInstall();
+      prompt.prompt();
+      const { outcome } = await prompt.userChoice;
+      if (outcome === 'accepted') {
+        el.installBtn.hidden = true;
+        toast('Added to your home screen');
+      }
+    });
+  } else {
+    el.installSteps.innerHTML = INSTALL_STEPS[deviceKind()];
+  }
+
+  el.install.hidden = false;
+  document.body.classList.add('is-locked');
+  el.installClose.focus();
+}
+
+function closeInstall() {
+  el.install.hidden = true;
+  document.body.classList.remove('is-locked');
+  el.installBtn.focus();
+}
+
 function openContact() {
   const address = contactAddress();
   el.contactEmail.textContent = address;
@@ -1026,10 +1099,26 @@ function init() {
   el.contact.addEventListener('click', (e) => { if (e.target === el.contact) closeContact(); });
   el.contactCopy.addEventListener('click', () => copyText(contactAddress(), 'Email address copied'));
 
+  el.installBtn.addEventListener('click', openInstall);
+  el.installClose.addEventListener('click', closeInstall);
+  el.install.addEventListener('click', (e) => { if (e.target === el.install) closeInstall(); });
+
+  // Saved rather than allowed to show Chrome's own banner, so the offer appears
+  // where the child's grown-up went looking for it.
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installEvent = e;
+  });
+  window.addEventListener('appinstalled', () => { el.installBtn.hidden = true; });
+
+  // Nothing to add when it is already on the home screen.
+  if (alreadyInstalled()) el.installBtn.hidden = true;
+
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     if (!el.parents.hidden) closeParents();
     else if (!el.contact.hidden) closeContact();
+    else if (!el.install.hidden) closeInstall();
   });
 
   window.addEventListener('pagehide', stopSpeaking);

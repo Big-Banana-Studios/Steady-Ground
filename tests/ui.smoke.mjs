@@ -338,6 +338,27 @@ try {
     return 1;`);
   check('escape closes it', await page.eval('return document.getElementById("parents").hidden'));
 
+  await page.eval('document.getElementById("installBtn").click(); return 1;');
+  check('the add-to-home-screen panel opens',
+    await page.eval('return !document.getElementById("install").hidden'));
+  check('it offers something usable, whichever route the browser allows',
+    await page.eval(`
+      const steps = document.getElementById('installSteps').innerText;
+      // Either a real one-tap install, or that device's actual instructions.
+      return /Add it now/.test(steps) || /Share|menu|address bar/.test(steps);`));
+  check('the manifest lists a raster icon, or no browser will offer to install',
+    await page.eval(`
+      const m = await (await fetch('./manifest.webmanifest')).json();
+      return m.icons.some((i) => i.type === 'image/png' && i.sizes === '192x192')
+        && m.icons.some((i) => i.purpose === 'maskable');`));
+  check('the icons it names actually exist',
+    await page.eval(`
+      const m = await (await fetch('./manifest.webmanifest')).json();
+      const found = await Promise.all(m.icons.map((i) => fetch(i.src).then((r) => r.ok)));
+      return found.every(Boolean);`));
+  await page.eval('document.getElementById("installClose").click(); return 1;');
+  check('and it closes again', await page.eval('return document.getElementById("install").hidden'));
+
   await page.eval('document.getElementById("contactBtn").click(); return 1;');
   check('the contact panel opens', await page.eval('return !document.getElementById("contact").hidden'));
   check('it shows the address',

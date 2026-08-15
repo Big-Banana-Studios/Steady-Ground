@@ -8,7 +8,7 @@ It runs entirely inside the browser, on the child's own device, using Liquid
 AI's `LFM2.5-1.2B-Instruct` through WebGPU. No server, no account, no API key,
 no bill. Once the model has downloaded it works with no internet at all.
 
-**Version 1.4.3 · Aug 2026**
+**Version 1.5.0 · Aug 2026**
 
 ---
 
@@ -49,6 +49,11 @@ tells you what to do about the answer:
 A device that *can* run it also reports how much space it has before asking for
 the 814 MB, and the app asks the browser to keep the download rather than
 evicting it after a quiet fortnight.
+
+**Add to Home Screen** in the sidebar gives it an icon and opens it full-screen.
+On Chrome and Edge that is one tap, using the browser's own install prompt. iOS
+has no install API at all, so there it shows the real steps — Share, then Add to
+Home Screen — because a button that silently does nothing is worse than none.
 
 ### Worth trying while you test
 
@@ -278,7 +283,7 @@ is harvested by spam bots, and this one belongs to a person.
 
 ```powershell
 npm test      # 109 filter tests — blocklists, coherence, length caps, fallbacks
-npm run smoke # 63 browser tests — drives real headless Chrome through the app
+npm run smoke # 68 browser tests — drives real headless Chrome through the app
 npm run check # both
 ```
 

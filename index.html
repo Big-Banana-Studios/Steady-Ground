@@ -56,6 +56,7 @@
       <button class="foot-btn" id="guideBtn" type="button">❓ How This Works</button>
       <button class="foot-btn" id="parentsBtn" type="button">👪 For Parents</button>
       <button class="foot-btn" id="contactBtn" type="button">✉️ Contact</button>
+      <button class="foot-btn" id="installBtn" type="button">📲 Add to Home Screen</button>
       <p class="status" id="status"><span class="status-dot" aria-hidden="true"></span><span id="statusText">Checking…</span></p>
       <p class="version" id="version">v1.0.0</p>
     </footer>
@@ -193,6 +194,24 @@
     <p class="made-in">Steady Ground is veteran-made and maintained in the USA.</p>
 
     <button class="btn" id="parentsClose" type="button">Close</button>
+  </div>
+</div>
+
+<div class="modal" id="install" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+    <h2 id="installTitle">Add to Home Screen</h2>
+
+    <p>
+      This puts Steady Ground on the home screen with its own icon, so it opens
+      full-screen like any other app — no browser bars, and no hunting for a
+      link. It is the same app either way; nothing extra is downloaded.
+    </p>
+
+    <!-- Filled in by app.js for whichever device is reading it. There is no way
+         to do this for somebody on an iPhone, so there they get the steps. -->
+    <div id="installSteps"></div>
+
+    <button class="btn" id="installClose" type="button">Close</button>
   </div>
 </div>
 

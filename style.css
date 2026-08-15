@@ -564,6 +564,10 @@ textarea.nudge { border-color: var(--calm); animation: nudge .5s ease; }
 .contact-email:hover { color: var(--accent-deep); }
 .contact-kids { color: var(--text-muted); }
 
+.install-steps { margin: 12px 0 0; padding-left: 24px; }
+.install-steps li { margin-bottom: 10px; line-height: 1.6; }
+.install-note { color: var(--text-muted); font-size: .9rem; margin-top: 14px; }
+
 /* Set apart by a rule rather than made loud: it says who stands behind the
    app, which a parent deciding whether to trust it wants to know. */
 .made-in {
