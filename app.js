@@ -31,7 +31,7 @@ import {
 import { createGuidebook, hasSeenGuidebook } from './guidebook.js';
 
 // Bump on every deploy, and keep APP_VERSION identical to VERSION in sw.js.
-const APP_VERSION = 'v1.4.2';
+const APP_VERSION = 'v1.4.3';
 const VERSION_DATE = 'Aug 2026';
 
 const MODEL_MB = 814;                    // measured from the Hugging Face CDN

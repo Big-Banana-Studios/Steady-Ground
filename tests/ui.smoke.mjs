@@ -330,6 +330,9 @@ try {
     (await page.eval('return document.getElementById("parents").textContent')).includes('Nowhere'));
   check('and it admits the filters are imperfect',
     (await page.eval('return document.getElementById("parents").textContent')).includes('No filter is perfect'));
+  check('and says who stands behind the app',
+    (await page.eval('return document.querySelector("#parents .made-in").textContent'))
+      .trim() === 'Steady Ground is veteran-made and maintained in the USA.');
   await page.eval(`
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     return 1;`);
@@ -346,8 +349,12 @@ try {
   check('it points a child at a grown-up',
     (await page.eval('return document.getElementById("contact").textContent')).includes('ask a grown-up'));
   check('it says who stands behind the app',
-    (await page.eval('return document.querySelector(".made-in").textContent'))
+    (await page.eval('return document.querySelector("#contact .made-in").textContent'))
       .trim() === 'Steady Ground is veteran-made and maintained in the USA.');
+  check('the two panels word it identically',
+    await page.eval(`
+      const lines = [...document.querySelectorAll('.made-in')].map(p => p.textContent.trim());
+      return lines.length === 2 && lines[0] === lines[1];`));
   check('the address is not sitting in the page source for spam bots',
     await page.eval(`
       // What a scraper fetching index.html would see, before any script runs.
