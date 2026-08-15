@@ -272,21 +272,25 @@ can check.
 
 ## What's in here
 
+The repository root *is* the site, so GitHub Pages can serve it with no
+configuration beyond switching Pages on.
+
 ```
-steady-ground/           the app — this folder is the whole deployable site
-├── index.html           layout, parent panel, CSP
-├── style.css            earth theme, light and dark
-├── app.js               tabs, generation, rendering, settings
-├── prompts.js           the ten tabs and every word the model is told
-├── safety.js            all the filtering, in one readable file
-├── guidebook.js         the seven welcome cards
-├── worker.js            runs the model, off the main thread
-├── sw.js                offline shell cache
-└── assets/              icon and the two self-hosted fonts
+index.html               layout, parent panel, CSP
+style.css                earth theme, light and dark
+app.js                   tabs, generation, rendering, settings
+prompts.js               the ten tabs and every word the model is told
+safety.js                all the filtering, in one readable file
+guidebook.js             the seven welcome cards
+worker.js                runs the model, off the main thread
+sw.js                    offline shell cache
+manifest.webmanifest     name, colours, icon
+assets/                  icon and the two self-hosted fonts
 
 tests/                   filter tests and the browser smoke test
 tools/serve.mjs          the little local server
 run.ps1                  start it and open a browser
+steady-ground-brief.md   the original build brief
 ```
 
 The fonts are served from `assets/fonts/` rather than from Google. The app tells
@@ -297,9 +301,15 @@ untrue.
 
 ## Putting it online
 
-The `steady-ground/` folder is a static site with no build step. Push its
-contents to a GitHub Pages repo and it works as-is — the model comes from the
-Hugging Face CDN, so nothing large is ever hosted by you.
+This is a static site with no build step, and the repository root is the site.
+In the repo on GitHub: **Settings → Pages → Source: Deploy from a branch →
+Branch: `main`, folder: `/ (root)` → Save**. A minute later it is live at
+
+    https://big-banana-studios.github.io/Steady-Ground/
+
+Nothing large is ever hosted by you: the model comes from the Hugging Face CDN
+and is cached in each child's browser. Every path in the app is relative, so it
+works at whatever URL it ends up on.
 
 When you deploy, bump **both**:
 

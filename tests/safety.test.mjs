@@ -13,7 +13,7 @@ import assert from 'node:assert/strict';
 import {
   checkInput, checkOutput, capLength, scrub, trimDeadEnd, trimTangent, fallback,
   looksLikeHomework, missingList, CALM_FALLBACK, ACTIVITIES_FALLBACK, MAX_INPUT_CHARS,
-} from '../steady-ground/safety.js';
+} from '../safety.js';
 
 const kindOf = (text) => {
   const result = checkInput(text);
