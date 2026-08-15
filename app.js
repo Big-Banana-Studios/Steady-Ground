@@ -34,8 +34,8 @@ import { createGuidebook, hasSeenGuidebook } from './guidebook.js';
 const APP_VERSION = 'v1.4.1';
 const VERSION_DATE = 'Aug 2026';
 
-const MODEL_MB = 814;
-const NEEDED_BYTES = 1.1 * 1073741824;   // the model, the runtime, and headroom                    // measured from the Hugging Face CDN
+const MODEL_MB = 814;                    // measured from the Hugging Face CDN
+const NEEDED_BYTES = 1.1 * 1073741824;   // the model, the runtime, and headroom
 const CACHED_FLAG = 'sg-model-cached';
 const THEME_KEY = 'sg-theme';
 const TEXT_SIZE_KEY = 'sg-text-size';
