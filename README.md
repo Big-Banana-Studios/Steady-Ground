@@ -8,7 +8,7 @@ It runs entirely inside the browser, on the child's own device, using Liquid
 AI's `LFM2.5-1.2B-Instruct` through WebGPU. No server, no account, no API key,
 no bill. Once the model has downloaded it works with no internet at all.
 
-**Version 1.3.5 · Aug 2026**
+**Version 1.4.0 · Aug 2026**
 
 ---
 
@@ -244,6 +244,13 @@ the crisis list, the injection list and the sign-off trim was silently failing
 to match. It surfaced through a funny answer, not a frightening one, which is
 worth remembering about filters in general.
 
+**There is a way to tell somebody.** A Contact panel in the sidebar carries an
+email address for concerns about the app, alongside a note that the 🚩 Looks
+wrong button copies the exchange ready to paste in — since nothing is recorded,
+that copy is the only record there is. The address is assembled in JavaScript
+rather than written into the page, because a plain-text address on a public site
+is harvested by spam bots, and this one belongs to a person.
+
 ### What it still can't do
 
 - A determined older child can get past any filter running on their own device.
@@ -259,7 +266,7 @@ worth remembering about filters in general.
 
 ```powershell
 npm test      # 109 filter tests — blocklists, coherence, length caps, fallbacks
-npm run smoke # 52 browser tests — drives real headless Chrome through the app
+npm run smoke # 58 browser tests — drives real headless Chrome through the app
 npm run check # both
 ```
 

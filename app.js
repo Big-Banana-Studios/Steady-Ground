@@ -31,7 +31,7 @@ import {
 import { createGuidebook, hasSeenGuidebook } from './guidebook.js';
 
 // Bump on every deploy, and keep APP_VERSION identical to VERSION in sw.js.
-const APP_VERSION = 'v1.3.5';
+const APP_VERSION = 'v1.4.0';
 const VERSION_DATE = 'Aug 2026';
 
 const MODEL_MB = 814;                    // measured from the Hugging Face CDN
@@ -70,7 +70,9 @@ const el = {
   followUps: $('followUps'), nextTip: $('nextTip'), finePrint: $('finePrint'),
   status: $('status'), statusText: $('statusText'),
   themeToggle: $('themeToggle'), textSizeBtn: $('textSizeBtn'),
-  guideBtn: $('guideBtn'), parentsBtn: $('parentsBtn'),
+  guideBtn: $('guideBtn'), parentsBtn: $('parentsBtn'), contactBtn: $('contactBtn'),
+  contact: $('contact'), contactEmail: $('contactEmail'),
+  contactCopy: $('contactCopy'), contactClose: $('contactClose'),
   menuToggle: $('menuToggle'), sidebar: $('sidebar'), scrim: $('scrim'),
   toast: $('toast'), version: $('version'),
   gate: $('gate'), gateTitle: $('gateTitle'), gateBody: $('gateBody'), gateAction: $('gateAction'),
@@ -870,6 +872,31 @@ function closeSidebar() {
   el.menuToggle.setAttribute('aria-expanded', 'false');
 }
 
+/* Kept in pieces and joined at runtime. The site is public, and an address
+   written into the HTML is scraped by spam bots within weeks — this one belongs
+   to a person, not a support desk. The rendered text is ordinary selectable
+   text, so anybody can still read it, copy it or type it out. */
+const CONTACT = ['karunahealinghearts', 'yahoo.com'];
+
+function contactAddress() {
+  return CONTACT.join('@');
+}
+
+function openContact() {
+  const address = contactAddress();
+  el.contactEmail.textContent = address;
+  el.contactEmail.href = `mailto:${address}?subject=${encodeURIComponent('Steady Ground')}`;
+  el.contact.hidden = false;
+  document.body.classList.add('is-locked');
+  el.contactClose.focus();
+}
+
+function closeContact() {
+  el.contact.hidden = true;
+  document.body.classList.remove('is-locked');
+  el.contactBtn.focus();
+}
+
 function openParents() {
   el.parents.hidden = false;
   document.body.classList.add('is-locked');
@@ -924,8 +951,15 @@ function init() {
   el.parentsClose.addEventListener('click', closeParents);
   el.parents.addEventListener('click', (e) => { if (e.target === el.parents) closeParents(); });
 
+  el.contactBtn.addEventListener('click', openContact);
+  el.contactClose.addEventListener('click', closeContact);
+  el.contact.addEventListener('click', (e) => { if (e.target === el.contact) closeContact(); });
+  el.contactCopy.addEventListener('click', () => copyText(contactAddress(), 'Email address copied'));
+
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !el.parents.hidden) closeParents();
+    if (e.key !== 'Escape') return;
+    if (!el.parents.hidden) closeParents();
+    else if (!el.contact.hidden) closeContact();
   });
 
   window.addEventListener('pagehide', stopSpeaking);

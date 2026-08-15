@@ -322,6 +322,26 @@ try {
     return 1;`);
   check('escape closes it', await page.eval('return document.getElementById("parents").hidden'));
 
+  await page.eval('document.getElementById("contactBtn").click(); return 1;');
+  check('the contact panel opens', await page.eval('return !document.getElementById("contact").hidden'));
+  check('it shows the address',
+    (await page.eval('return document.getElementById("contactEmail").textContent'))
+      === 'karunahealinghearts@yahoo.com');
+  check('the address is a working mailto link',
+    (await page.eval('return document.getElementById("contactEmail").getAttribute("href")'))
+      .startsWith('mailto:karunahealinghearts@yahoo.com'));
+  check('it points a child at a grown-up',
+    (await page.eval('return document.getElementById("contact").textContent')).includes('ask a grown-up'));
+  check('the address is not sitting in the page source for spam bots',
+    await page.eval(`
+      // What a scraper fetching index.html would see, before any script runs.
+      const html = await (await fetch('./index.html')).text();
+      return !html.includes('karunahealinghearts') && !html.includes('yahoo.com');`));
+  await page.eval(`
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    return 1;`);
+  check('escape closes the contact panel', await page.eval('return document.getElementById("contact").hidden'));
+
   await page.eval('document.getElementById("guideBtn").click(); return 1;');
   await sleep(150);
   check('the guidebook can be reopened',

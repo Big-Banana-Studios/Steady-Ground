@@ -55,6 +55,7 @@
       <button class="foot-btn" id="textSizeBtn" type="button">🔠 Text size: normal</button>
       <button class="foot-btn" id="guideBtn" type="button">❓ How This Works</button>
       <button class="foot-btn" id="parentsBtn" type="button">👪 For Parents</button>
+      <button class="foot-btn" id="contactBtn" type="button">✉️ Contact</button>
       <p class="status" id="status"><span class="status-dot" aria-hidden="true"></span><span id="statusText">Checking…</span></p>
       <p class="version" id="version">v1.0.0</p>
     </footer>
@@ -190,6 +191,39 @@
     </p>
 
     <button class="btn" id="parentsClose" type="button">Close</button>
+  </div>
+</div>
+
+<div class="modal" id="contact" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+    <h2 id="contactTitle">Contact</h2>
+
+    <p>
+      If you have any concerns about this app — something it said, something that
+      looks wrong, or a question about how it works — please get in touch.
+    </p>
+
+    <!-- The address is written in by app.js rather than sitting in the page
+         source, because this is a public site and a plain-text address gets
+         harvested by spam bots. It still selects and copies normally. -->
+    <p class="contact-line">
+      <a class="contact-email" id="contactEmail" href="#">loading…</a>
+      <button class="btn-ghost" id="contactCopy" type="button">📋 Copy</button>
+    </p>
+
+    <p>
+      If it is something the helper said, a copy of the answer helps a lot —
+      the <strong>🚩 Looks wrong</strong> button under any answer copies it for
+      you, ready to paste into the email. Nothing is recorded anywhere, so that
+      copy is the only record there is.
+    </p>
+
+    <p class="contact-kids">
+      <strong>If you're a kid reading this:</strong> ask a grown-up to send the
+      email with you.
+    </p>
+
+    <button class="btn" id="contactClose" type="button">Close</button>
   </div>
 </div>
 
