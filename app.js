@@ -630,8 +630,8 @@ const CANNOT_RUN = {
     + 'If this is a newer phone, check for a Chrome update in the Play Store and '
     + 'try again.<br><br>It runs well on a computer with Chrome or Edge.',
   desktop:
-    'This needs <strong>Chrome or Edge</strong>.<br><br>'
-    + 'Firefox and Safari cannot run it on a computer yet.',
+    'This needs <strong>Chrome or Edge</strong>, kept up to date.<br><br>'
+    + 'If you are already using one of those, the update is usually what fixes it.',
 };
 
 /* Browsers report a storage quota rather than the disk, and Chrome sets that at

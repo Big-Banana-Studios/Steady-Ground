@@ -42,7 +42,7 @@ tells you what to do about the answer:
 
 | Device | Needs |
 |---|---|
-| Computer | Chrome or Edge. Firefox and Safari can't yet. |
+| Computer | Chrome or Edge, kept up to date. |
 | iPhone / iPad | **iOS 18 or newer.** Every browser on iOS is Safari underneath, so installing Chrome changes nothing — it's the iOS version that matters. |
 | Android | Chrome, updated, on Android 12 or newer. |
 
